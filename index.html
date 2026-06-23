@@ -3,24 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mein HTML Test</title>
+    <title>RAM Downloader Pro</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            text-align: center;
-            padding: 50px;
+        /* Moderner, cleaner Look – aber mit einem Augenzwinkern */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            background: linear-gradient(145deg, #0b1a2e 0%, #1a2f44 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 60px;
+            padding: 50px 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
+            text-align: center;
+            transition: transform 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .card:hover {
+            transform: scale(1.01);
+        }
+
         h1 {
-            color: #007bff;
+            font-size: 2.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            text-shadow: 0 4px 12px rgba(0, 20, 40, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .subhead {
+            color: #a0c4e8;
+            font-size: 1.1rem;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            background: rgba(0, 0, 0, 0.25);
+            display: inline-block;
+            padding: 6px 22px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .ram-icon {
+            font-size: 4.8rem;
+            line-height: 1.2;
+            margin: 10px 0 15px 0;
+            filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .btn-download {
+            background: #00d4ff;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border: none;
+            border-radius: 100px;
+            padding: 24px 48px;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 30, 80, 0.5);
+            box-shadow: 0 16px 30px -6px rgba(0, 100, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px auto 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-download:hover {
+            transform: scale(1.03);
+            background: linear-gradient(135deg, #00d4ff, #0055dd);
+            box-shadow: 0 22px 40px -6px #0055ffaa, 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-download:active {
+            transform: scale(0.95);
+            box-shadow: 0 8px 20px -2px #0033bb;
+        }
+
+        .btn-download i {
+            font-size: 2.2rem;
+            font-style: normal;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .warning-text {
+            margin-top: 30px;
+            color: #8ab3d9;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 18px;
+            border-radius: 50px;
+            display: inline-block;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            max-width: 420px;
+            height: 8px;
+            background: #1e3a5a;
+            border-radius: 20px;
+            margin: 20px auto 0 auto;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00d4ff, #a855f7);
+            border-radius: 20px;
+            transition: width 0.15s linear;
+            box-shadow: 0 0 16px #00a6ff;
+        }
+
+        .fake-status {
+            font-size: 0.9rem;
+            color: #8fcbff;
+            margin-top: 10px;
+            min-height: 1.6rem;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+            visibility: hidden;
+        }
+
+        .footer-meta {
+            margin-top: 35px;
+            font-size: 0.75rem;
+            color: #4a6f8f;
+            letter-spacing: 0.5px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 550px) {
+            .card { padding: 30px 20px; }
+            h1 { font-size: 2rem; }
+            .btn-download { font-size: 1.6rem; padding: 18px 24px; }
+            .ram-icon { font-size: 3.6rem; }
         }
     </style>
 </head>
 <body>
 
-    <h1>Erfolgreich getestet!</h1>
-    <p>Deine erste index.html Datei funktioniert einwandfrei.</p>
+    <div class="card">
+        <!-- RAM Icon / Prank Signal -->
+        <div class="ram-icon">🧠⬆️</div>
 
+        <h1>⬇️ RAM Booster</h1>
+        <div class="subhead">✔️ 100% kostenlos · Turbo-Modus</div>
+
+        <!-- Der berühmte "Download More RAM" Knopf -->
+        <button class="btn-download" id="prankBtn">
+            <i>⚡</i> Download More RAM <i>💾</i>
+        </button>
+
+        <!-- Fake Fortschrittsbalken + Status (für den Prank-Effekt) -->
+        <div class="progress-bar-bg" id="progressWrapper">
+            <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="fake-status" id="statusText">📡 Verbinde zu RAM-Server ...</div>
+
+        <div class="warning-text">
+            ⚠️ 128 GB RAM werden heruntergeladen – bitte warten
+        </div>
+
+        <div class="footer-meta">
+            🔒 SSL verschlüsselt · 256-Bit RAM-Checksum
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // DOM-Elemente
+            const prankBtn = document.getElementById('prankBtn');
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressFill = document.getElementById('progressFill');
+            const statusText = document.getElementById('statusText');
+
+            // Statusmeldungen für den Prank-Fortschritt
+            const statusMessages = [
+                "📡 Verbinde zu RAM-Server ...",
+                "🔍 Scanne freien Speicher ...",
+                "📦 Lade RAM-Module (64 GB) ...",
+                "⚡ Entpacke Turbo-Cache ...",
+                "🧩 Defragmentiere Gehirnzellen ...",
+                "✅ RAM wird installiert ...",
+                "🚀 Fast fertig ...",
+                "🎯 Download abgeschlossen!"
+            ];
+
+            let progressInterval = null;
+            let progressValue = 0;
+            let msgIndex = 0;
+            let isPrankActive = false;   // verhindert mehrfaches Klicken während des Ablaufs
+
+            // Funktion: Prank starten (Fortschrittsbalken + dann Rickroll)
+            function startPrank() {
+                // Falls schon ein Prank läuft, nichts tun
+                if (isPrankActive) return;
+
+                // Button deaktivieren (optisch)
+                prankBtn.disabled = true;
+                prankBtn.style.opacity = '0.7';
+                prankBtn.style.cursor = 'default';
+                prankBtn.innerHTML = `<i>⏳</i> RAM wird geladen ...`;
+
+                // Fortschrittsbalken und Status einblenden
+                progressWrapper.style.visibility = 'visible';
+                progressWrapper.style.opacity = '1';
+                statusText.style.visibility = 'visible';
+
+                // Zurücksetzen
+                progressValue = 0;
+                msgIndex = 0;
+                progressFill.style.width = '0%';
+                statusText.textContent = statusMessages[0] || 'Starte ...';
+                isPrankActive = true;
+
+                // Interval starten – alle 120ms ein Update (simuliert Download)
+                progressInterval = setInterval(function() {
+                    // Fortschritt erhöhen (zufällig, aber insgesamt ca. 5–7 Sekunden)
+                    const step = Math.floor(Math.random() * 4) + 2;  // 2–5%
+                    progressValue = Math.min(progressValue + step, 100);
+                    progressFill.style.width = progressValue + '%';
+
+                    // Statusmeldung wechseln (alle ~20% oder nach Gefühl)
+                    const newMsgIndex = Math.min(
+                        Math.floor(progressValue / 14),   // ca. 7 Stufen bis 100%
+                        statusMessages.length - 1
+                    );
+                    if (newMsgIndex !== msgIndex) {
+                        msgIndex = newMsgIndex;
+                        statusText.textContent = statusMessages[msgIndex] || '⚡ Ladevorgang ...';
+                    }
+
+                    // Wenn 100% erreicht, Intervall stoppen und Rickroll abfeuern
+                    if (progressValue >= 100) {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+
+                        // Kurze Pause, dann Rickroll (damit Nutzer den "Abschluss" sieht)
+                        setTimeout(function() {
+                            // RICKROLL – leite zu Never Gonna Give You Up weiter
+                            window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                        }, 500);
+                    }
+                }, 120);
+            }
+
+            // Event-Listener für den Knopf
+            prankBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                startPrank();
+            });
+
+            // Kleine Sicherheit: Falls jemand versehentlich doppelt klickt,
+            // aber wir haben schon isPrankActive als Schutz.
+
+            // Zusätzlicher Gag: "Download More RAM" – der Knopf hat schon einen starken
+            // Prank-Charakter. Aber wir wollen, dass der Nutzer den Fortschritt sieht,
+            // bevor er gerickrollt wird.
+
+            // (Optional) Wenn der Nutzer die Seite neu lädt, wird alles zurückgesetzt.
+            // Das ist gewünscht.
+
+            console.log('💾 RAM-Downloader bereit – klick auf den Knopf!');
+        })();
+    </script>
+
+    <!-- Hinweis: Der Code ist komplett eigenständig, kein externes CSS/Fonts nötig. -->
+    <!-- Der Prank: "Download More RAM" → simulierter Fortschritt → Rickroll -->
 </body>
 </html>

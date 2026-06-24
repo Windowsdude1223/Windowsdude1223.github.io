@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>💰 Get Free Robux 💰</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b0c0e;
+      font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      transition: background 0.2s ease;
+    }
+
+    /* Hauptcontainer – wie eine App-Karte */
+    .app-card {
+      background: linear-gradient(145deg, #1c1f24, #14171c);
+      border-radius: 48px;
+      padding: 40px 28px 35px;
+      box-shadow: 0 30px 50px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: filter 0.3s, opacity 0.3s;
+      position: relative;
+      z-index: 10;
+    }
+
+    .robux-icon {
+      font-size: 4.5rem;
+      filter: drop-shadow(0 0 20px #00b06b);
+      margin-bottom: 10px;
+      letter-spacing: 5px;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: #e0ffe8;
+      text-shadow: 0 0 20px #00cc6a, 0 4px 10px black;
+      margin: 5px 0;
+      letter-spacing: 1px;
+    }
+
+    .robux-amount {
+      background: #1f2a23;
+      border-radius: 60px;
+      padding: 12px 25px;
+      display: inline-block;
+      margin: 18px 0 25px;
+      border: 1px solid #28b463;
+      box-shadow: 0 0 25px #198a4b;
+    }
+
+    .robux-amount span {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #98ffb9;
+      text-shadow: 0 0 12px #00b140;
+    }
+
+    .btn {
+      background: #00b359;
+      border: none;
+      border-radius: 80px;
+      padding: 22px 30px;
+      font-size: 2rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #ffffff;
+      background: linear-gradient(180deg, #00cc66 0%, #008844 100%);
+      box-shadow: 0 10px 0 #005c2e, 0 20px 30px rgba(0,0,0,0.7), 0 0 40px #00e676;
+      cursor: pointer;
+      width: 100%;
+      border: 2px solid #88ffbb;
+      transition: all 0.08s ease;
+      text-shadow: 0 2px 5px black;
+      margin: 10px 0 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 5px 0 #004d25, 0 15px 25px black, 0 0 50px #00ff80;
+      background: linear-gradient(180deg, #00b34a 0%, #006633 100%);
+    }
+
+    .hint {
+      color: #7f9b8a;
+      font-size: 0.9rem;
+      margin-top: 20px;
+      font-weight: 500;
+    }
+
+    /* ========== SHUTDOWN OVERLAY ========== */
+    .shutdown-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease-in;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+    }
+
+    .shutdown-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+      background: #000000;
+    }
+
+    /* Der weiße Apple-Logo-ähnliche Kreis (Ladeindikator) */
+    .spinner-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    /* Fake Apple Progress Spinner */
+    .apple-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top: 4px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .shutdown-text {
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 400;
+      letter-spacing: 0.8px;
+      opacity: 0.9;
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    }
+
+    /* Der Power-Off Slider (wird erst nach kurzer Zeit eingeblendet) */
+    .slide-to-power-off {
+      margin-top: 40px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .slide-to-power-off.visible {
+      opacity: 1;
+    }
+
+    .power-icon {
+      font-size: 2.4rem;
+      color: white;
+      filter: drop-shadow(0 0 8px white);
+    }
+
+    .slider-track {
+      width: 180px;
+      height: 8px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slider-fill {
+      width: 0%;
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+      transition: width 2.2s ease-out;
+    }
+
+    .slider-knob {
+      position: absolute;
+      left: -5px;
+      top: -10px;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 0 20px white;
+      transition: left 2.2s ease-out;
+    }
+
+    /* Nachricht "iPhone wird ausgeschaltet" */
+    .power-off-message {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      margin-top: 25px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      letter-spacing: 0.5px;
+    }
+
+    .power-off-message.show {
+      opacity: 1;
+    }
+
+    /* Responsive */
+    @media (max-width: 450px) {
+      .app-card {
+        padding: 30px 20px;
+      }
+      .btn {
+        font-size: 1.6rem;
+        padding: 18px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-card" id="mainCard">
+    <div class="robux-icon">💎🪙💎</div>
+    <h1>ROBUX</h1>
+    <div class="robux-amount">
+      <span>+10,000 R$</span>
+    </div>
+    
+    <button class="btn" id="robuxBtn">
+      🔥 GET FREE ROBUX 🔥
+    </button>
+    <div class="hint">
+      ⚡ 1 Tipp = iPhone Shutdown ⚡
+    </div>
+    <div style="color:#4a5c4f; margin-top:12px; font-size:0.8rem;">
+      (Fake Power-Off Simulation)
+    </div>
+  </div>
+
+  <!-- SHUTDOWN OVERLAY (iPhone Fake Shutdown) -->
+  <div class="shutdown-overlay" id="shutdownOverlay">
+    <div class="spinner-container">
+      <div class="apple-spinner" id="spinner"></div>
+      <div class="shutdown-text" id="shutdownStatusText">Bitte warten</div>
+    </div>
+
+    <!-- Slide to power off erscheint später -->
+    <div class="slide-to-power-off" id="slideContainer">
+      <span class="power-icon">⏻</span>
+      <div class="slider-track" id="sliderTrack">
+        <div class="slider-fill" id="sliderFill"></div>
+        <div class="slider-knob" id="sliderKnob"></div>
+      </div>
+      <span style="color:white; font-size:1.8rem;">⟳</span>
+    </div>
+
+    <div class="power-off-message" id="powerOffMessage">
+      iPhone wird ausgeschaltet
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const robuxButton = document.getElementById('robuxBtn');
+      const overlay = document.getElementById('shutdownOverlay');
+      const spinner = document.getElementById('spinner');
+      const statusText = document.getElementById('shutdownStatusText');
+      const slideContainer = document.getElementById('slideContainer');
+      const sliderFill = document.getElementById('sliderFill');
+      const sliderKnob = document.getElementById('sliderKnob');
+      const powerOffMessage = document.getElementById('powerOffMessage');
+      const mainCard = document.getElementById('mainCard');
+
+      // Zustand verfolgen
+      let isShuttingDown = false;
+      let shutdownTimer = null;
+      let slideTimer = null;
+
+      // Funktion zum Zurücksetzen aller Overlay-Elemente
+      function resetOverlayElements() {
+        if (spinner) spinner.style.display = 'block';
+        if (statusText) statusText.textContent = 'Bitte warten';
+        if (slideContainer) slideContainer.classList.remove('visible');
+        if (sliderFill) sliderFill.style.width = '0%';
+        if (sliderKnob) sliderKnob.style.left = '-5px';
+        if (powerOffMessage) powerOffMessage.classList.remove('show');
+        if (overlay) overlay.classList.remove('active');
+      }
+
+      // Funktion, die den Shutdown-Prozess startet
+      function startFakeShutdown() {
+        if (isShuttingDown) {
+          return; // bereits im Shutdown-Modus
+        }
+
+        isShuttingDown = true;
+        
+        // Overlay einblenden (schwarz)
+        if (overlay) {
+          overlay.classList.add('active');
+        }
+
+        // Sicherstellen, dass Spinner sichtbar ist, Slider versteckt
+        if (spinner) spinner.style.display = 'block';
+        if (statusText) statusText.textContent = 'Bitte warten';
+        if (slideContainer) slideContainer.classList.remove('visible');
+        if (powerOffMessage) powerOffMessage.classList.remove('show');
+        
+        // Slider zurücksetzen
+        if (sliderFill) sliderFill.style.width = '0%';
+        if (sliderKnob) sliderKnob.style.left = '-5px';
+
+        // Phase 1: Spinner anzeigen für ca. 2.5 Sekunden, dann "Slide to power off" zeigen
+        if (shutdownTimer) clearTimeout(shutdownTimer);
+        
+        shutdownTimer = setTimeout(() => {
+          // Spinner ausblenden, Slide-Element einblenden
+          if (spinner) spinner.style.display = 'none';
+          if (statusText) statusText.textContent = ''; // leer oder behalten
+          
+          if (slideContainer) {
+            slideContainer.classList.add('visible');
+          }
+
+          // Nun automatisch den Slider füllen (simuliert Wischen)
+          if (slideTimer) clearTimeout(slideTimer);
+          
+          // Kleiner Delay, dann Slider-Animation starten
+          slideTimer = setTimeout(() => {
+            if (sliderFill && sliderKnob) {
+              // Slider füllen über 2.2 Sekunden (css transition bereits definiert)
+              sliderFill.style.width = '100%';
+              // Knob bewegen (track breite ca 180px, knob 28px, daher left etwa 180-28+padding)
+              // Berechne left: sliderTrack breite 180px, knob 28px -> left = 180 - 28 + 4 (offset) = 156px ca.
+              sliderKnob.style.left = '156px'; 
+            }
+
+            // Sobald Slider voll ist (nach 2.2s), zeige "iPhone wird ausgeschaltet"
+            setTimeout(() => {
+              if (powerOffMessage) {
+                powerOffMessage.classList.add('show');
+              }
+              
+              // Nach weiteren 2 Sekunden komplett schwarz lassen? iPhone würde ausgehen.
+              // Wir lassen den Bildschirm einfach schwarz (bleibt so). 
+              // Der Nutzer kann durch Tippen auf Overlay oder Neuladen zurücksetzen.
+              // Wir fügen eine Funktion hinzu, dass nach 4 weiteren Sekunden der Overlay antippbar wird zum Schließen.
+              // Aber original iPhone shutdown: Bildschirm bleibt aus. 
+              // Wir implementieren: Tippen auf den schwarzen Bildschirm setzt alles zurück.
+              
+            }, 2300); // kurz nach Slider-Ende
+
+          }, 400); // kleiner Versatz nach Einblendung des Sliders
+          
+        }, 2600); // Spinner dreht sich 2.6 Sekunden
+      }
+
+      // Funktion zum vollständigen Zurücksetzen des Shutdowns (durch Nutzerinteraktion)
+      function resetShutdown() {
+        // Alle Timer löschen
+        if (shutdownTimer) {
+          clearTimeout(shutdownTimer);
+          shutdownTimer = null;
+        }
+        if (slideTimer) {
+          clearTimeout(slideTimer);
+          slideTimer = null;
+        }
+        
+        // Overlay ausblenden und Elemente zurücksetzen
+        if (overlay) {
+          overlay.classList.remove('active');
+        }
+        
+        // Spinner, Slider etc. reset
+        if (spinner) spinner.style.display = 'block';
+        if (statusText) statusText.textContent = 'Bitte warten';
+        if (slideContainer) slideContainer.classList.remove('visible');
+        if (sliderFill) {
+          sliderFill.style.transition = 'none';
+          sliderFill.style.width = '0%';
+          // Transition wiederherstellen (nach kurzer Zeit)
+          setTimeout(() => {
+            if (sliderFill) sliderFill.style.transition = 'width 2.2s ease-out';
+          }, 20);
+        }
+        if (sliderKnob) {
+          sliderKnob.style.transition = 'none';
+          sliderKnob.style.left = '-5px';
+          setTimeout(() => {
+            if (sliderKnob) sliderKnob.style.transition = 'left 2.2s ease-out';
+          }, 20);
+        }
+        if (powerOffMessage) powerOffMessage.classList.remove('show');
+        
+        isShuttingDown = false;
+        
+        // Button ggf. wieder in Normalzustand (war nie disabled, aber sicher)
+        if (robuxButton) {
+          robuxButton.style.pointerEvents = 'auto';
+        }
+      }
+
+      // Event Listener für den Robux-Button
+      if (robuxButton) {
+        robuxButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (isShuttingDown) return; // nicht doppelt starten
+          
+          // Kurze haptische Rückmeldung (Button bleibt klickbar)
+          startFakeShutdown();
+        });
+      }
+
+      // Overlay selbst antippbar machen, um Shutdown zurückzusetzen (wie iPhone-Seitentaste simuliert)
+      if (overlay) {
+        overlay.addEventListener('click', function(e) {
+          // Nur wenn Overlay aktiv ist, zurücksetzen
+          if (overlay.classList.contains('active')) {
+            // Verhindern, dass Klick auf Slider-Elemente versehentlich zurücksetzt? Nein, absichtlich.
+            resetShutdown();
+          }
+        });
+        
+        // Auch Touch-Events für mobile
+        overlay.addEventListener('touchstart', function(e) {
+          if (overlay.classList.contains('active')) {
+            e.preventDefault();
+            resetShutdown();
+          }
+        }, {passive: false});
+      }
+
+      // Zusätzlich: Escape-Taste oder Zurück-Button? Nicht nötig.
+      // Sicherstellen, dass beim Verlassen der Seite nichts hängen bleibt (optional)
+      window.addEventListener('beforeunload', function() {
+        if (shutdownTimer) clearTimeout(shutdownTimer);
+        if (slideTimer) clearTimeout(slideTimer);
+      });
+
+      // Falls jemand den Button mehrfach klickt, während Shutdown läuft, nichts tun.
+      console.log('🔥 Robux Fake Shutdown bereit. Tippe auf den Button!');
+    })();
+  </script>
+</body>
+</html>

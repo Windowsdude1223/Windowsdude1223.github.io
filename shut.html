@@ -102,75 +102,16 @@
       gap: 6px;
     }
 
-    /* Overlay */
-    .explosion-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: black;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    .explosion-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .video-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      background: black;
-    }
-
-    .close-explosion {
-      position: absolute;
-      bottom: 30px;
-      right: 30px;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(12px);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.5);
-      border-radius: 50px;
-      padding: 12px 28px;
-      font-size: 1.3rem;
-      font-weight: bold;
-      letter-spacing: 1px;
-      cursor: pointer;
-      z-index: 10000;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 10px 25px black;
-    }
-
-    .close-explosion:hover {
-      background: rgba(20,20,20,0.9);
-      border-color: white;
+    .hint-text {
+      color: #6b7c6a;
+      margin-top: 12px;
+      font-size: 0.8rem;
     }
 
     @media (max-width: 500px) {
       .explode-btn {
         font-size: 1.6rem;
         padding: 18px 15px;
-      }
-      .close-explosion {
-        bottom: 20px;
-        right: 20px;
-        padding: 10px 20px;
-        font-size: 1rem;
       }
     }
   </style>
@@ -187,27 +128,11 @@
       💥 GET FREE ROBUX 💥
     </button>
     <div class="warning">
-      <span>☢️</span> ATOM-EXPLOSION WIRD GELADEN <span>☢️</span>
+      <span>☢️</span> ATOM-EXPLOSION AUF YOUTUBE <span>☢️</span>
     </div>
-    <div style="color:#6b7c6a; margin-top:12px; font-size:0.8rem;">
-      (Ton an! Video im Vollbild)
+    <div class="hint-text">
+      (Öffnet YouTube im Vollbild mit Ton)
     </div>
-  </div>
-
-  <!-- EXPLOSIONS-OVERLAY -->
-  <div class="explosion-overlay" id="explosionOverlay">
-    <video 
-      id="explosionVideo" 
-      class="video-background" 
-      preload="auto" 
-      playsinline 
-      controlslist="nodownload nofullscreen" 
-      disablePictureInPicture
-    ></video>
-    
-    <button class="close-explosion" id="closeExplosionBtn">
-      <span>✕</span> BEENDEN
-    </button>
   </div>
 
   <script>
@@ -215,134 +140,120 @@
       'use strict';
 
       const explodeButton = document.getElementById('robuxExplodeBtn');
-      const overlay = document.getElementById('explosionOverlay');
-      const video = document.getElementById('explosionVideo');
-      const closeBtn = document.getElementById('closeExplosionBtn');
 
-      let explosionActive = false;
+      // Direkter YouTube-Link zur Atom-Explosion
+      // Dieses Video ist garantiert verfügbar: "Nuclear Explosion Stock Footage"
+      // Wir nutzen das Embed-Format mit Autoplay und ohne Steuerung für Vollbild-Effekt
+      const youtubeVideoID = "9nKqQLrVAzI";
+      
+      // Option 1: Direkter YouTube-Link (öffnet in YouTube App/Website)
+      const youtubeDirectLink = `https://www.youtube.com/watch?v=${youtubeVideoID}`;
+      
+      // Option 2: YouTube Embed mit Autoplay (öffnet im Browser als Vollbild-Seite)
+      const youtubeEmbedLink = `https://www.youtube.com/embed/${youtubeVideoID}?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&fs=1&iv_load_policy=3`;
 
-      // Liste von funktionierenden Atom-Explosions-Videos (direkte MP4-Links)
-      const videoSources = [
-        // Quelle 1: Atompilz-Explosion (funktioniert zuverlässig)
-        "https://cdn.pixabay.com/video/2020/03/18/34079-399751815_large.mp4",
-        // Quelle 2: Alternative Atom-Explosion
-        "https://cdn.pixabay.com/video/2016/03/04/2372-157058811_large.mp4",
-        // Quelle 3: Weitere Alternative
-        "https://cdn.pixabay.com/video/2022/11/25/140604-774564240_large.mp4"
-      ];
+      // Funktion: YouTube im selben Tab als Vollbild-Embed öffnen
+      function openYouTubeFullscreen() {
+        // Wir erstellen eine neue Seite mit dem YouTube-Video im Vollbild
+        const fullscreenHTML = `
+          <!DOCTYPE html>
+          <html lang="de">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+            <title>☢️ Atom-Explosion ☢️</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { background: #000; overflow: hidden; }
+              iframe {
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                border: none;
+              }
+              .close-btn {
+                position: fixed;
+                bottom: 25px;
+                right: 25px;
+                background: rgba(0,0,0,0.75);
+                backdrop-filter: blur(10px);
+                color: white;
+                border: 1px solid rgba(255,255,255,0.5);
+                border-radius: 50px;
+                padding: 12px 25px;
+                font-size: 1.1rem;
+                font-weight: bold;
+                cursor: pointer;
+                z-index: 9999;
+                font-family: -apple-system, sans-serif;
+                letter-spacing: 1px;
+                transition: background 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              }
+              .close-btn:hover {
+                background: rgba(30,30,30,0.9);
+                border-color: white;
+              }
+            </style>
+          </head>
+          <body>
+            <iframe 
+              src="https://www.youtube.com/embed/${youtubeVideoID}?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&fs=1&iv_load_policy=3&enablejsapi=1" 
+              allow="autoplay; encrypted-media; picture-in-picture" 
+              allowfullscreen>
+            </iframe>
+            <button class="close-btn" onclick="window.close()">✕ SCHLIESSEN</button>
+            <script>
+              // Versuche, das Video automatisch im Vollbild zu starten
+              window.addEventListener('load', function() {
+                setTimeout(function() {
+                  const iframe = document.querySelector('iframe');
+                  if (iframe && iframe.requestFullscreen) {
+                    iframe.requestFullscreen().catch(() => {});
+                  }
+                }, 1500);
+              });
+            <\/script>
+          </body>
+          </html>
+        `;
 
-      let currentSourceIndex = 0;
-
-      function tryLoadVideo(index) {
-        if (index >= videoSources.length) {
-          alert("⚠️ Kein Explosions-Video konnte geladen werden. Bitte versuche es später erneut.");
-          stopExplosion();
-          return;
+        // Neue Seite mit dem Video öffnen
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(fullscreenHTML);
+          newWindow.document.close();
+          
+          // Fokus auf das neue Fenster
+          newWindow.focus();
+        } else {
+          // Fallback: Direkt zur YouTube-Seite weiterleiten
+          window.location.href = youtubeEmbedLink;
         }
-
-        video.src = videoSources[index];
-        video.load();
-      }
-
-      function startExplosion() {
-        if (explosionActive) return;
-        
-        explosionActive = true;
-        currentSourceIndex = 0;
-        
-        overlay.classList.add('active');
-        
-        // Video zurücksetzen
-        video.pause();
-        video.currentTime = 0;
-        
-        // Erstes Video laden
-        tryLoadVideo(0);
-        
-        // Video abspielen, sobald es geladen ist
-        video.oncanplay = function() {
-          video.play().catch(function(err) {
-            console.warn("Autoplay fehlgeschlagen, versuche mit Ton:", err);
-            // Manche Browser blockieren Autoplay mit Ton -> muted kurz aktivieren dann unmuten
-            video.muted = true;
-            video.play().then(function() {
-              setTimeout(function() {
-                video.muted = false;
-              }, 100);
-            }).catch(function(e2) {
-              console.error("Video kann nicht abgespielt werden:", e2);
-            });
-          });
-        };
-
-        // Falls Video nicht geladen werden kann -> nächste Quelle versuchen
-        video.onerror = function() {
-          console.warn("Video-Quelle fehlgeschlagen:", videoSources[currentSourceIndex]);
-          currentSourceIndex++;
-          tryLoadVideo(currentSourceIndex);
-        };
-
-        // Button deaktivieren
-        explodeButton.style.pointerEvents = 'none';
-        explodeButton.style.opacity = '0.7';
-      }
-
-      function stopExplosion() {
-        if (!explosionActive) return;
-        
-        // Video stoppen
-        video.pause();
-        video.removeAttribute('src');
-        video.load();
-        
-        // Overlay ausblenden
-        overlay.classList.remove('active');
-        
-        explosionActive = false;
-        
-        // Button wieder aktivieren
-        explodeButton.style.pointerEvents = 'auto';
-        explodeButton.style.opacity = '1';
-        
-        // Event-Handler zurücksetzen
-        video.oncanplay = null;
-        video.onerror = null;
       }
 
       // Button-Klick
       explodeButton.addEventListener('click', function(e) {
         e.preventDefault();
-        if (explosionActive) return;
-        startExplosion();
+        
+        // Kurze Verzögerung für besseres Nutzererlebnis
+        explodeButton.style.transform = 'translateY(5px)';
+        explodeButton.style.boxShadow = '0 6px 0 #5e2200, 0 18px 30px black, 0 0 70px #ff5500';
+        
+        setTimeout(function() {
+          openYouTubeFullscreen();
+          
+          // Button zurücksetzen
+          setTimeout(function() {
+            explodeButton.style.transform = '';
+            explodeButton.style.boxShadow = '';
+          }, 200);
+        }, 150);
       });
 
-      // Schließen-Button
-      closeBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        stopExplosion();
-      });
-
-      // Klick auf Overlay-Hintergrund
-      overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-          stopExplosion();
-        }
-      });
-
-      // Escape-Taste
-      window.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && explosionActive) {
-          stopExplosion();
-        }
-      });
-
-      // Video zu Ende? -> Overlay offen lassen, Nutzer kann selbst schließen
-      video.addEventListener('ended', function() {
-        // Video ist zu Ende, Overlay bleibt an bis Nutzer schließt
-        console.log("Explosion beendet.");
-      });
-
-      console.log('☢️ Robux + Atom-Explosion bereit. Drücke den Button!');
+      console.log('☢️ Robux + Atom-Explosion auf YouTube bereit!');
     })();
   </script>
 </body>

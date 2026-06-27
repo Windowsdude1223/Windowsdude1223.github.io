@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAM Download - Minecraft Edition</title>
+    <title>RAM NEXUS - Cyberpunk Edition</title>
     <style>
         * {
             margin: 0;
@@ -11,373 +11,516 @@
             box-sizing: border-box;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
 
         body {
-            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
-            font-family: 'Pixelify Sans', monospace;
+            background: #000;
+            font-family: 'Arial', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            position: relative;
         }
 
-        /* Blocky Minecraft style container */
-        .container {
-            max-width: 600px;
+        /* Animated gradient background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                        #000;
+            z-index: -2;
+            animation: bgShift 8s ease-in-out infinite;
         }
 
-        .minecraft-box {
-            background: #8B4513;
-            border: 4px solid;
-            border-color: #A0522D #654321 #654321 #A0522D;
-            padding: 30px;
+        @keyframes bgShift {
+            0%, 100% {
+                background: radial-gradient(ellipse at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                            radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                            #000;
+            }
+            50% {
+                background: radial-gradient(ellipse at 80% 50%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
+                            radial-gradient(ellipse at 20% 80%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
+                            #000;
+            }
+        }
+
+        /* Grid overlay */
+        .grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, 0.08) 25%, rgba(0, 255, 255, 0.08) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.08) 75%, rgba(0, 255, 255, 0.08) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.08) 25%, rgba(0, 255, 255, 0.08) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.08) 75%, rgba(0, 255, 255, 0.08) 76%, transparent 77%, transparent);
+            background-size: 60px 60px;
+            z-index: -1;
+            animation: gridScroll 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(60px); }
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            z-index: 1;
+            pointer-events: none;
+            animation: scanlineFlicker 0.15s infinite;
+        }
+
+        @keyframes scanlineFlicker {
+            0%, 100% { opacity: 0.03; }
+            50% { opacity: 0.05; }
+        }
+
+        /* Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            animation: float-up 8s infinite linear;
+        }
+
+        .particle.pink {
+            background: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+            width: 95%;
+        }
+
+        /* Main card */
+        .card {
+            background: rgba(10, 10, 30, 0.7);
+            border: 2px solid #00ffff;
+            border-radius: 0;
+            padding: 50px 40px;
             box-shadow: 
-                inset 2px 2px 0 rgba(255,255,255,0.3),
-                inset -2px -2px 0 rgba(0,0,0,0.3),
-                4px 4px 0 rgba(0,0,0,0.3);
+                0 0 30px rgba(0, 255, 255, 0.4),
+                0 0 60px rgba(255, 0, 255, 0.2),
+                inset 0 0 30px rgba(0, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            animation: cardPulse 3s ease-in-out infinite;
+            border-image: linear-gradient(135deg, #00ffff, #ff00ff) 1;
         }
 
-        .title {
-            background: #2B2B2B;
-            color: #FFD700;
-            padding: 15px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            border: 3px solid;
-            border-color: #3D3D3D #1A1A1A #1A1A1A #3D3D3D;
-            text-shadow: 2px 2px 0 #000;
-            letter-spacing: 2px;
+        @keyframes cardPulse {
+            0%, 100% {
+                box-shadow: 
+                    0 0 30px rgba(0, 255, 255, 0.4),
+                    0 0 60px rgba(255, 0, 255, 0.2),
+                    inset 0 0 30px rgba(0, 255, 255, 0.05);
+            }
+            50% {
+                box-shadow: 
+                    0 0 50px rgba(0, 255, 255, 0.6),
+                    0 0 100px rgba(255, 0, 255, 0.4),
+                    inset 0 0 40px rgba(0, 255, 255, 0.1);
+            }
         }
 
-        .content {
-            background: #C0C0C0;
-            border: 2px solid;
-            border-color: #DFDFDF #808080 #808080 #DFDFDF;
-            padding: 25px;
-            margin-bottom: 20px;
+        /* Title */
+        h1 {
+            font-size: 3rem;
+            color: #00ffff;
+            text-shadow: 
+                0 0 10px #00ffff,
+                0 0 20px #0088ff,
+                0 0 30px #ff00ff,
+                2px 2px 0 rgba(255, 0, 255, 0.5);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            font-weight: 900;
+            animation: titleGlow 2s ease-in-out infinite;
         }
 
-        .icon {
-            font-size: 80px;
-            text-align: center;
-            margin: 20px 0;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            animation: bounce 1s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+        @keyframes titleGlow {
+            0%, 100% {
+                text-shadow: 
+                    0 0 10px #00ffff,
+                    0 0 20px #0088ff,
+                    0 0 30px #ff00ff,
+                    2px 2px 0 rgba(255, 0, 255, 0.5);
+            }
+            50% {
+                text-shadow: 
+                    0 0 20px #00ffff,
+                    0 0 40px #0088ff,
+                    0 0 60px #ff00ff,
+                    3px 3px 0 rgba(255, 0, 255, 0.8);
+            }
         }
 
         .subtitle {
-            font-size: 18px;
-            text-align: center;
-            color: #000;
-            margin: 15px 0;
-            font-weight: 700;
-            background: #FFD700;
-            padding: 8px;
-            border: 2px solid #FFA500;
+            font-size: 1.2rem;
+            color: #ff00ff;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px #ff00ff;
+            letter-spacing: 2px;
+            animation: subtitleFlicker 0.1s infinite;
+        }
+
+        @keyframes subtitleFlicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
         }
 
         .description {
-            font-size: 14px;
-            color: #000;
-            line-height: 1.6;
-            margin: 15px 0;
+            font-size: 1rem;
+            color: #00ffff;
+            margin-bottom: 30px;
             text-align: center;
-            background: #FFFF99;
-            padding: 10px;
-            border: 1px dashed #999;
-        }
-
-        .button-container {
-            display: flex;
-            gap: 10px;
-            margin: 25px 0;
-        }
-
-        .minecraft-btn {
-            flex: 1;
-            background: linear-gradient(180deg, #90EE90 0%, #00AA00 50%, #007700 100%);
-            border: 3px solid;
-            border-color: #00CC00 #003300 #003300 #00CC00;
-            padding: 20px 15px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #000;
-            cursor: pointer;
-            font-family: 'Pixelify Sans', monospace;
-            text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.1s;
-            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+            line-height: 1.6;
         }
 
-        .minecraft-btn:hover:not(:disabled) {
-            background: linear-gradient(180deg, #AAFF00 0%, #00BB00 50%, #008800 100%);
-            transform: translate(-2px, -2px);
-            box-shadow: 2px 2px 0 #000;
+        /* Icon */
+        .icon {
+            font-size: 6rem;
+            text-align: center;
+            margin: 30px 0;
+            animation: iconFloat 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #ff00ff);
         }
 
-        .minecraft-btn:active:not(:disabled) {
-            transform: translate(1px, 1px);
-            border-color: #003300 #00CC00 #00CC00 #003300;
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0) rotateZ(0deg); }
+            50% { transform: translateY(-20px) rotateZ(5deg); }
         }
 
-        .minecraft-btn:disabled {
-            background: linear-gradient(180deg, #999 0%, #666 50%, #333 100%);
-            cursor: not-allowed;
-            opacity: 0.7;
+        /* Button */
+        .btn {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            background-size: 200% 200%;
+            border: 2px solid #00ffff;
+            border-radius: 0;
+            padding: 20px 50px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 500px;
+            margin: 30px auto;
+            display: block;
+            transition: all 0.2s;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.6),
+                0 0 40px rgba(255, 0, 255, 0.4);
+            animation: btnPulse 1.5s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
         }
 
-        .red-btn {
-            background: linear-gradient(180deg, #FF6B6B 0%, #CC0000 50%, #990000 100%);
-            border-color: #FF0000 #660000 #660000 #FF0000;
+        @keyframes btnPulse {
+            0%, 100% {
+                box-shadow: 
+                    0 0 20px rgba(0, 255, 255, 0.6),
+                    0 0 40px rgba(255, 0, 255, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 
+                    0 0 40px rgba(0, 255, 255, 0.9),
+                    0 0 80px rgba(255, 0, 255, 0.6);
+                transform: scale(1.02);
+            }
         }
 
-        .red-btn:hover:not(:disabled) {
-            background: linear-gradient(180deg, #FF8888 0%, #DD0000 50%, #AA0000 100%);
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 3s infinite;
         }
 
-        .red-btn:active:not(:disabled) {
-            border-color: #660000 #FF0000 #FF0000 #660000;
+        @keyframes shine {
+            0% { transform: translate(-100%, -100%); }
+            100% { transform: translate(100%, 100%); }
         }
 
-        /* Progress section */
-        .progress-section {
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 
+                0 0 50px rgba(0, 255, 255, 1),
+                0 0 100px rgba(255, 0, 255, 0.8),
+                0 10px 30px rgba(0, 0, 0, 0.5);
+            background-position: 200% center;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        /* Progress */
+        .progress-container {
             display: none;
-            background: #C0C0C0;
-            border: 2px solid;
-            border-color: #DFDFDF #808080 #808080 #DFDFDF;
-            padding: 20px;
-            margin-bottom: 20px;
+            margin-top: 40px;
         }
 
-        .progress-section.active {
+        .progress-container.active {
             display: block;
         }
 
         .progress-label {
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #000;
+            color: #00ffff;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #00ffff;
+            letter-spacing: 1px;
         }
 
-        .progress-bar-bg {
-            background: #000080;
-            border: 2px solid;
-            border-color: #DFDFDF #808080 #808080 #DFDFDF;
+        .progress-bar {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
             height: 20px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.2);
         }
 
-        .progress-bar-fill {
-            background: linear-gradient(90deg, #0000FF 0%, #00FFFF 50%, #0000FF 100%);
+        .progress-fill {
             height: 100%;
             width: 0%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
+            background-size: 200% 200%;
             transition: width 0.05s linear;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 3px;
-            font-size: 11px;
-            color: #fff;
-            font-weight: 700;
+            box-shadow: 0 0 10px #00ffff, inset 0 0 5px rgba(255, 255, 255, 0.3);
+            animation: gradientShift 2s ease infinite;
         }
 
-        .status-text {
-            background: #000080;
-            color: #00FF00;
-            padding: 10px;
-            border: 1px solid #0000FF;
-            font-size: 13px;
+        .progress-text {
+            background: rgba(0, 30, 40, 0.9);
+            border: 1px solid #00ffff;
+            color: #00ff00;
+            padding: 12px;
+            font-size: 0.9rem;
             font-family: 'Courier New', monospace;
-            margin-bottom: 10px;
-            min-height: 40px;
-            line-height: 1.4;
-        }
-
-        .ram-counter {
-            background: #FFD700;
-            color: #000;
-            padding: 10px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 16px;
-            border: 2px solid #FFA500;
-        }
-
-        .info-box {
-            background: #FFFF99;
-            border: 2px dotted #999;
-            padding: 12px;
-            margin: 15px 0;
-            font-size: 13px;
-            color: #000;
             line-height: 1.5;
+            min-height: 50px;
+            text-shadow: 0 0 5px #00ff00;
+            margin-bottom: 10px;
         }
 
-        .footer-text {
-            font-size: 12px;
+        .ram-display {
+            color: #ff00ff;
+            font-size: 1.2rem;
             text-align: center;
-            color: #000;
-            margin-top: 20px;
-            background: #E0E0E0;
-            padding: 10px;
-            border: 1px solid #999;
+            font-weight: 900;
+            text-shadow: 0 0 10px #ff00ff;
+            letter-spacing: 2px;
+            margin-top: 10px;
         }
 
-        /* Minecraft water animation */
-        @keyframes water-animation {
-            0%, 100% { background-position: 0 0; }
-            25% { background-position: 16px 0; }
-            50% { background-position: 32px 0; }
-            75% { background-position: 16px 0; }
-        }
-
+        /* Warning */
         .warning {
-            background: #FF6B6B;
-            border: 2px solid #CC0000;
-            color: #000;
-            padding: 12px;
-            margin: 15px 0;
-            font-weight: 700;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid #ff0000;
+            color: #ff6666;
+            padding: 15px;
+            margin-top: 25px;
             text-align: center;
-            font-size: 14px;
-            animation: warning-pulse 1s ease-in-out infinite;
+            font-weight: 700;
+            text-shadow: 0 0 10px #ff0000;
+            animation: warningPulse 1s ease-in-out infinite;
         }
 
-        @keyframes warning-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        @keyframes warningPulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* Footer */
+        .footer {
+            color: #00ffff;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            padding-top: 15px;
+            text-shadow: 0 0 5px #00ffff;
+            letter-spacing: 1px;
         }
 
         /* Mobile */
-        @media (max-width: 500px) {
-            .minecraft-box { padding: 15px; }
-            .title { font-size: 18px; }
-            .icon { font-size: 60px; }
-            .minecraft-btn { font-size: 12px; padding: 15px 10px; }
-            .content { padding: 15px; }
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .icon { font-size: 4rem; }
+            .btn { font-size: 1rem; padding: 15px 30px; }
+            .card { padding: 30px 20px; }
+            .subtitle { font-size: 0.95rem; }
+            .description { font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
+    <div class="bg-animated"></div>
+    <div class="grid"></div>
+    <div class="scanlines"></div>
+    <div class="particles" id="particles"></div>
+
     <div class="container">
-        <div class="minecraft-box">
-            <!-- Title Bar -->
-            <div class="title">⬇️ RAM DOWNLOADER ⬇️</div>
+        <div class="card">
+            <div class="icon">💾⚡🧠</div>
+            
+            <h1>RAM NEXUS</h1>
+            <div class="subtitle">⚡ CYBERPUNK EDITION ⚡</div>
 
-            <!-- Main Content -->
-            <div class="content">
-                <!-- Icon -->
-                <div class="icon">💾 ⚡ 🧠</div>
-
-                <!-- Subtitle -->
-                <div class="subtitle">Get More RAM!</div>
-
-                <!-- Description -->
-                <div class="description">
-                    Download unlimited RAM for your system!<br>
-                    100% FREE • 100% SAFE • 100% LEGAL
-                </div>
-
-                <!-- Info Box -->
-                <div class="info-box">
-                    Your computer is running low on RAM.<br>
-                    Click the button below to download more!<br>
-                    Installation will begin automatically.
-                </div>
-
-                <!-- Warning -->
-                <div class="warning">
-                    ⚠️ WARNING: Large download incoming!
-                </div>
-
-                <!-- Buttons -->
-                <div class="button-container">
-                    <button class="minecraft-btn" id="downloadBtn">
-                        📥 Download RAM
-                    </button>
-                </div>
+            <div class="description">
+                UNLIMITED BANDWIDTH • QUANTUM PROCESSORS<br>
+                NEURAL INTERFACE READY • 100% FREE
             </div>
 
-            <!-- Progress Section -->
-            <div class="progress-section" id="progressSection">
-                <div class="progress-label">📊 Download Progress:</div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="progressFill"></div>
+            <button class="btn" id="downloadBtn">
+                ⬇️ INITIALIZE DOWNLOAD ⬇️
+            </button>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-label">📡 TRANSFER PROTOCOL</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <div class="status-text" id="statusText">
-                    C:\RAM\Download\installer.exe<br>
-                    Initializing...<br>
+                <div class="progress-text" id="progressText">
+                    $ RAM_DOWNLOAD.exe<br>
+                    Initializing system...<br>
                 </div>
-                <div class="ram-counter" id="ramCounter">0 GB / 512 GB</div>
+                <div class="ram-display" id="ramDisplay">0 GB / 512 GB</div>
             </div>
 
-            <!-- Footer -->
-            <div class="footer-text">
-                Minecraft RAM Downloader v1.0 | Made in 1.19.2
+            <div class="warning">
+                ⚠️ WARNING: LARGE DATA TRANSFER • KEEP CONNECTION ALIVE
+            </div>
+
+            <div class="footer">
+                ENCRYPTED • ANONYMOUS • NO LOGS<br>
+                NEXUS v2.0 | POWERED BY QUANTUM SERVERS
             </div>
         </div>
     </div>
 
     <script>
+        // Create particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle ' + (Math.random() > 0.5 ? 'pink' : '');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 6 + 4) + 's';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
         const downloadBtn = document.getElementById('downloadBtn');
-        const progressSection = document.getElementById('progressSection');
+        const progressContainer = document.getElementById('progressContainer');
         const progressFill = document.getElementById('progressFill');
-        const statusText = document.getElementById('statusText');
-        const ramCounter = document.getElementById('ramCounter');
+        const progressText = document.getElementById('progressText');
+        const ramDisplay = document.getElementById('ramDisplay');
 
         const statuses = [
-            "C:\\RAM\\Download\\installer.exe\nInitializing system...\n",
-            "C:\\RAM\\Download\\installer.exe\nLoading modules...\n",
-            "C:\\RAM\\Download\\installer.exe\nDecompressing data...\n",
-            "C:\\RAM\\Download\\installer.exe\nInstalling drivers...\n",
-            "C:\\RAM\\Download\\installer.exe\nOptimizing memory...\n",
-            "C:\\RAM\\Download\\installer.exe\nFinalizing installation...\n",
-            "C:\\RAM\\Download\\installer.exe\nInstallation complete!\n[RICKROLL ACTIVATED]\n",
+            "$ RAM_DOWNLOAD.exe\nInitializing quantum link...",
+            "$ RAM_DOWNLOAD.exe\nConnecting to neural network...",
+            "$ RAM_DOWNLOAD.exe\nTransferring data packets...",
+            "$ RAM_DOWNLOAD.exe\nOptimizing memory allocation...",
+            "$ RAM_DOWNLOAD.exe\nCompiling kernel extensions...",
+            "$ RAM_DOWNLOAD.exe\nFinalizing transfer protocol...",
+            "$ RAM_DOWNLOAD.exe\nINITIALIZATION COMPLETE\n[RICKROLL MODE ACTIVATED]",
         ];
 
         downloadBtn.addEventListener('click', function() {
             if (downloadBtn.disabled) return;
 
             downloadBtn.disabled = true;
-            downloadBtn.textContent = "⏳ DOWNLOADING...";
-            progressSection.classList.add('active');
+            downloadBtn.textContent = '⏳ DOWNLOADING...';
+            progressContainer.classList.add('active');
 
             let progress = 0;
             let statusIndex = 0;
 
             const interval = setInterval(() => {
-                progress += Math.random() * 7 + 3;
+                progress += Math.random() * 6 + 2;
                 progress = Math.min(progress, 100);
 
                 progressFill.style.width = progress + '%';
-                progressFill.textContent = Math.floor(progress) + '%';
 
                 const ramGB = Math.floor((progress / 100) * 512);
-                ramCounter.textContent = `${ramGB} GB / 512 GB`;
+                ramDisplay.textContent = `${ramGB} GB / 512 GB`;
 
                 statusIndex = Math.min(Math.floor(progress / 14), statuses.length - 1);
-                statusText.textContent = statuses[statusIndex];
+                progressText.textContent = statuses[statusIndex];
 
                 if (progress >= 100) {
                     clearInterval(interval);
-                    statusText.textContent = "Installation complete!\n🎉 RICKROLL TIME! 🎉";
-                    ramCounter.textContent = "512 GB / 512 GB ✓";
-                    
+                    progressText.textContent = "$ RAM_DOWNLOAD.exe\nTRANSFER COMPLETE!\n🎉 RICKROLL TIME 🎉";
+                    ramDisplay.textContent = "512 GB / 512 GB ✨";
+
                     setTimeout(() => {
                         window.location.href = 'https://youtu.be/NJcoFs7_pl0?si=UpdVQpOt8td6P16J';
                     }, 1500);

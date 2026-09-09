@@ -29,7 +29,6 @@
             overflow: hidden;
             box-shadow: 0 12px 40px rgba(0,0,0,0.8);
         }
-        /* Kamera-Video füllt den Container */
         #video {
             position: absolute;
             top: 0;
@@ -39,7 +38,6 @@
             object-fit: cover;
             background: #2a2a2a;
         }
-        /* Halbtransparentes Bild – liegt über der Kamera */
         #overlay-img {
             position: absolute;
             top: 0;
@@ -53,9 +51,8 @@
             transition: opacity 0.3s ease;
             -webkit-user-select: none;
             user-select: none;
-            display: none; /* Standardmäßig unsichtbar bis Upload */
+            display: none;
         }
-        /* Upload-Button – schwebend über dem Bild */
         .upload-btn {
             position: absolute;
             bottom: 80px;
@@ -83,11 +80,9 @@
         .upload-btn:active {
             transform: translateX(-50%) scale(0.95);
         }
-        /* Unsichtbarer File-Input */
         #file-input {
             display: none;
         }
-        /* Info-Box unten */
         .info {
             position: absolute;
             bottom: 18px;
@@ -116,7 +111,6 @@
             margin: 0 4px;
             opacity: 0.7;
         }
-        /* Entfernen-Button (kleines X) – erscheint wenn Bild geladen */
         .remove-btn {
             position: absolute;
             top: 16px;
@@ -145,7 +139,6 @@
         .remove-btn:active {
             transform: scale(0.9);
         }
-        /* Fallback-Nachricht für Kamera-Fehler */
         .fallback-msg {
             position: absolute;
             top: 50%;
@@ -164,7 +157,6 @@
             text-align: center;
             z-index: 5;
         }
-        /* Opacity-Slider (optional) */
         .opacity-control {
             position: absolute;
             bottom: 140px;
@@ -222,6 +214,44 @@
             text-align: center;
             font-weight: 500;
         }
+        /* Kamera-Status-Anzeige */
+        .camera-status {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 30px;
+            color: #4caf50;
+            font-size: 0.75rem;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .camera-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .camera-status.error {
+            color: #f44336;
+            border-color: rgba(244, 67, 54, 0.3);
+        }
+        .camera-status.error .dot {
+            background: #f44336;
+        }
         @media (max-width: 480px) {
             .info {
                 font-size: 0.7rem;
@@ -251,36 +281,37 @@
                 top: 12px;
                 right: 12px;
             }
+            .camera-status {
+                font-size: 0.65rem;
+                padding: 4px 10px;
+                top: 12px;
+                left: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Kamera-Video -->
         <video id="video" autoplay playsinline muted></video>
-        
-        <!-- Halbtransparentes Overlay-Bild (wird per Upload gefüllt) -->
         <img id="overlay-img" alt="Dein hochgeladenes Bild">
-
-        <!-- Unsichtbarer File-Input -->
+        
         <input type="file" id="file-input" accept="image/*">
-
-        <!-- Upload-Button -->
         <button class="upload-btn" id="upload-btn">📤 Bild hochladen</button>
-
-        <!-- Entfernen-Button -->
         <button class="remove-btn" id="remove-btn">✕</button>
-
-        <!-- Opacity-Regler (optional) -->
+        
         <div class="opacity-control" id="opacity-control">
             <label>Transparenz</label>
             <input type="range" id="opacity-slider" min="10" max="90" value="55">
             <span class="opacity-value" id="opacity-value">55%</span>
         </div>
 
-        <!-- Info-Box -->
         <div class="info">
             📷 <strong>Kamera</strong> <span>•</span> 🖼️ <strong id="image-status">Kein Bild</strong>
+        </div>
+
+        <div class="camera-status" id="camera-status">
+            <span class="dot"></span>
+            <span id="camera-status-text">Starte...</span>
         </div>
     </div>
 
@@ -296,38 +327,84 @@
             const opacityValue = document.getElementById('opacity-value');
             const opacityControl = document.getElementById('opacity-control');
             const imageStatus = document.getElementById('image-status');
+            const cameraStatus = document.getElementById('camera-status');
+            const cameraStatusText = document.getElementById('camera-status-text');
             
             let fallbackElement = null;
             let currentImageLoaded = false;
+            let stream = null;
+            let cameraActive = false;
 
-            // --- Kamera starten ---
+            // --- Kamera starten (Safari-optimiert) ---
             async function startCamera() {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
+                    // Safari benötigt oft explizite Constraints
+                    const constraints = {
+                        video: {
                             facingMode: 'environment',
                             width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        } 
-                    });
+                            height: { ideal: 720 },
+                            // Für Safari auf iOS wichtig:
+                            frameRate: { ideal: 30 }
+                        },
+                        audio: false
+                    };
+
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    
+                    // Wichtig für Safari: srcObject setzen und dann play()
                     video.srcObject = stream;
+                    
+                    // Safari benötigt manchmal einen kleinen Delay
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
                     await video.play();
+                    
+                    cameraActive = true;
+                    cameraStatus.className = 'camera-status';
+                    cameraStatusText.textContent = 'Aktiv';
                     
                     if (fallbackElement) {
                         fallbackElement.remove();
                         fallbackElement = null;
                     }
+                    
                 } catch (err) {
-                    console.warn('Kamera nicht verfügbar:', err);
+                    console.error('Kamera-Fehler (Safari):', err);
+                    cameraActive = false;
+                    cameraStatus.className = 'camera-status error';
+                    cameraStatusText.textContent = '❌ Nicht verfügbar';
+                    
+                    // Spezifische Fehlermeldung für Safari
+                    let errorMsg = '📷 Kamera nicht verfügbar';
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        errorMsg = '📷 Zugriff verweigert\nBitte erlaube in den Einstellungen';
+                    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                        errorMsg = '📷 Keine Kamera gefunden';
+                    }
+                    
                     video.style.background = '#1a1a1a';
                     
                     if (!fallbackElement) {
                         fallbackElement = document.createElement('div');
                         fallbackElement.className = 'fallback-msg';
-                        fallbackElement.innerText = '📷 Kamera nicht verfügbar';
+                        fallbackElement.style.whiteSpace = 'pre-line';
+                        fallbackElement.innerText = errorMsg;
                         container.appendChild(fallbackElement);
                     }
                 }
+            }
+
+            // --- Kamera stoppen (für Safari sauber) ---
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                video.srcObject = null;
+                cameraActive = false;
+                cameraStatus.className = 'camera-status error';
+                cameraStatusText.textContent = '❌ Gestoppt';
             }
 
             // --- Bild hochladen ---
@@ -340,12 +417,10 @@
                     overlay.style.display = 'block';
                     currentImageLoaded = true;
                     
-                    // UI aktualisieren
                     imageStatus.textContent = 'Bild geladen ✅';
                     removeBtn.style.display = 'flex';
                     opacityControl.style.display = 'flex';
                     
-                    // Opacity auf Standard setzen
                     const defaultOpacity = 0.55;
                     overlay.style.opacity = defaultOpacity;
                     opacitySlider.value = defaultOpacity * 100;
@@ -362,7 +437,7 @@
                 imageStatus.textContent = 'Kein Bild';
                 removeBtn.style.display = 'none';
                 opacityControl.style.display = 'none';
-                fileInput.value = ''; // Input zurücksetzen
+                fileInput.value = '';
             }
 
             // --- Opacity steuern ---
@@ -373,27 +448,23 @@
             });
 
             // --- Event-Listener ---
-            
-            // Upload-Button öffnet Dateiauswahl
             uploadBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 fileInput.click();
             });
 
-            // Datei ausgewählt
             fileInput.addEventListener('change', function(e) {
                 if (this.files && this.files[0]) {
                     loadImage(this.files[0]);
                 }
             });
 
-            // Bild entfernen
             removeBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 removeImage();
             });
 
-            // Drag & Drop Support (optional – für bessere UX)
+            // Drag & Drop
             container.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 this.style.border = '3px solid rgba(255,255,255,0.3)';
@@ -408,35 +479,56 @@
                 const files = e.dataTransfer.files;
                 if (files && files[0] && files[0].type.startsWith('image/')) {
                     loadImage(files[0]);
-                } else {
-                    alert('Bitte ziehe ein Bild hierher!');
                 }
             });
 
-            // --- Kamera starten ---
-            startCamera();
-
-            // --- Fallback: Bei Touch/Click Kamera neu starten falls nötig ---
+            // --- Safari-spezifische Initialisierung ---
+            // iOS Safari benötigt User-Interaktion für Kamera
+            // Wir starten die Kamera beim ersten Klick/Touch
+            
             let cameraStarted = false;
-            video.addEventListener('loadedmetadata', () => {
-                cameraStarted = true;
+            
+            // Versuche Kamera beim Laden (funktioniert auf macOS Safari, nicht auf iOS)
+            setTimeout(() => {
+                if (!cameraStarted) {
+                    // Nur versuchen, wenn nicht bereits gestartet
+                    startCamera().then(() => {
+                        cameraStarted = true;
+                    }).catch(() => {
+                        // Warte auf User-Interaktion
+                    });
+                }
+            }, 500);
+
+            // Für iOS: Beim ersten Touch/Click starten
+            function handleUserInteraction() {
+                if (!cameraStarted) {
+                    startCamera().then(() => {
+                        cameraStarted = true;
+                    }).catch(() => {
+                        // Fehler wird bereits in startCamera behandelt
+                    });
+                }
+            }
+
+            document.addEventListener('touchstart', handleUserInteraction, { once: true, passive: true });
+            document.addEventListener('click', handleUserInteraction, { once: true });
+
+            // --- Falls die Kamera aus irgendeinem Grund stoppt (z.B. iOS Safari) ---
+            // Bei iOS kann die Kamera beim Wechseln des Tabs stoppen
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && cameraActive) {
+                    // Tab wurde verlassen – Kamera läuft weiter, aber wir könnten sie stoppen
+                    // oder beim Zurückkehren neu starten
+                } else if (!document.hidden && !cameraActive && !stream) {
+                    // Tab ist wieder aktiv – versuche Kamera neu zu starten
+                    if (!cameraStarted) {
+                        startCamera();
+                    }
+                }
             });
 
-            document.addEventListener('touchstart', function onTouch() {
-                if (!cameraStarted) {
-                    startCamera();
-                }
-                document.removeEventListener('touchstart', onTouch);
-            }, { once: true });
-
-            document.addEventListener('click', function onClick() {
-                if (!cameraStarted) {
-                    startCamera();
-                }
-                document.removeEventListener('click', onClick);
-            }, { once: true });
-
-            // --- Tastaturkürzel (optional) ---
+            // --- Tastaturkürzel ---
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'r' || e.key === 'R') {
                     removeImage();
@@ -445,6 +537,9 @@
                     fileInput.click();
                 }
             });
+
+            console.log('📷 Safari-kompatible Kamera + Overlay bereit');
+            console.log('ℹ️  Tipp: Klicke/Tippe auf den Bildschirm, falls die Kamera nicht startet');
 
         })();
     </script>

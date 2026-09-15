@@ -2,31 +2,57 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- viewport-fit=cover + Notch/Home-Indicator Support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#111111">
+
+    <!-- Damit die App im Vollbild läuft, wenn man sie über "Zum Home-Bildschirm" hinzufügt -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AR Zeichnen">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
     <title>Einfache AR Drawing App mit Zoom</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html {
+            /* Verhindert, dass iOS die Schrift beim Drehen vergrößert */
+            -webkit-text-size-adjust: 100%;
         }
 
         body, html {
             width: 100%;
+            /* Feste Höhe statt 100vh (iOS Safari Adressleisten-Bug) */
             height: 100%;
             overflow: hidden;
-            font-family: Arial, sans-serif;
+            overscroll-behavior: none;
+            font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
             background: #111;
             color: #fff;
+            position: fixed;
+            inset: 0;
+            touch-action: none;
         }
 
         #ar-container {
             position: relative;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
+            /* dynamische Viewport-Höhe (moderne Browser), Fallback via JS-Variable unten */
+            height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            touch-action: none;
         }
 
         #webcam-video {
@@ -37,6 +63,7 @@
             height: 100%;
             object-fit: cover;
             z-index: 1;
+            background: #000;
         }
 
         #overlay-image {
@@ -54,21 +81,57 @@
 
         #controls {
             position: absolute;
-            top: 20px;
+            /* Respektiert die Notch / Dynamic Island oben */
+            top: calc(env(safe-area-inset-top, 0px) + 12px);
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
             background: rgba(0, 0, 0, 0.7);
             padding: 12px 20px;
-            border-radius: 10px;
+            border-radius: 14px;
             display: flex;
             gap: 20px;
             align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-width: 90%;
+            max-width: calc(100% - 24px);
             flex-wrap: wrap;
             justify-content: center;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        #controls.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        /* Runder Knopf zum Ein-/Ausblenden der Steuerleiste */
+        #toggle-controls {
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 0px) + 12px);
+            right: calc(env(safe-area-inset-right, 0px) + 12px);
+            z-index: 11;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            font-size: 18px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            touch-action: manipulation;
+        }
+
+        #toggle-controls:active {
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .control-group {
@@ -78,9 +141,15 @@
             font-size: 12px;
         }
 
+        input[type="range"] {
+            width: 130px;
+            touch-action: pan-x;
+        }
+
         input[type="file"] {
             color: #fff;
-            font-size: 14px;
+            font-size: 13px;
+            max-width: 140px;
         }
 
         #placeholder-text {
@@ -90,6 +159,18 @@
             background: rgba(0,0,0,0.8);
             padding: 20px;
             border-radius: 8px;
+            pointer-events: none;
+            max-width: 80%;
+        }
+
+        /* Home-Indicator unten nicht verdecken lassen */
+        #bottom-safe-spacer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: env(safe-area-inset-bottom, 0px);
+            z-index: 4;
             pointer-events: none;
         }
     </style>
@@ -118,6 +199,10 @@
                 <input type="range" id="zoomRange" min="0.2" max="3" step="0.05" value="1">
             </div>
         </div>
+
+        <button id="toggle-controls" title="Steuerleiste ein-/ausblenden">⚙️</button>
+
+        <div id="bottom-safe-spacer"></div>
     </div>
 
     <script>
@@ -129,6 +214,44 @@
         const zoomRange = document.getElementById('zoomRange');
         const zoomValue = document.getElementById('zoomValue');
         const placeholderText = document.getElementById('placeholder-text');
+        const arContainer = document.getElementById('ar-container');
+        const controls = document.getElementById('controls');
+        const toggleControlsBtn = document.getElementById('toggle-controls');
+
+        // Steuerleiste ein-/ausblenden für die volle Ansicht
+        function setControlsVisible(visible) {
+            controls.classList.toggle('hidden', !visible);
+            toggleControlsBtn.textContent = visible ? '⚙️' : '⚙️';
+        }
+
+        toggleControlsBtn.addEventListener('click', () => {
+            const isHidden = controls.classList.contains('hidden');
+            setControlsVisible(isHidden);
+        });
+
+        // 0. Fallback für echte Viewport-Höhe auf älteren iOS-Versionen
+        //    (falls 100dvh nicht unterstützt wird)
+        function setRealViewportHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+            arContainer.style.height = `${window.innerHeight}px`;
+        }
+        setRealViewportHeight();
+        window.addEventListener('resize', setRealViewportHeight);
+        window.addEventListener('orientationchange', () => {
+            // kurze Verzögerung, damit iOS die neue Höhe schon gemeldet hat
+            setTimeout(setRealViewportHeight, 100);
+        });
+
+        // Verhindert Pinch-Zoom / Doppeltipp-Zoom auf der Seite selbst
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('dblclick', (e) => e.preventDefault());
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, { passive: false });
 
         // 1. Kamera starten (mit Fallback für ältere iOS-Geräte)
         async function initCamera() {
@@ -138,9 +261,13 @@
             }
 
             try {
-                // Versuch 1: Rückkamera bevorzugen
+                // Versuch 1: Rückkamera bevorzugen, hohe Auflösung anfragen
                 const constraints = {
-                    video: { facingMode: { ideal: "environment" } },
+                    video: {
+                        facingMode: { ideal: "environment" },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
                     audio: false
                 };
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);

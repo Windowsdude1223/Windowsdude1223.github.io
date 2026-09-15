@@ -2,546 +2,202 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Kamera + eigenes Bild (Upload)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einfache AR Drawing App mit Zoom</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-        body {
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
             background: #111;
+            color: #fff;
+        }
+
+        #ar-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            font-family: system-ui, -apple-system, sans-serif;
-            overflow: hidden;
         }
-        .container {
-            position: relative;
-            width: 100vw;
-            max-width: 800px;
-            aspect-ratio: 4 / 3;
-            background: #000;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.8);
-        }
-        #video {
+
+        #webcam-video {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            background: #2a2a2a;
+            z-index: 1;
         }
-        #overlay-img {
+
+        #overlay-image {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            max-width: 90%;
+            max-height: 90%;
             object-fit: contain;
+            z-index: 2;
+            opacity: 0.5;
             pointer-events: none;
-            opacity: 0.55;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
-            transition: opacity 0.3s ease;
-            -webkit-user-select: none;
-            user-select: none;
-            display: none;
+            transform: scale(1);
+            transform-origin: center center;
+            transition: transform 0.05s ease-out;
         }
-        .upload-btn {
+
+        #controls {
             position: absolute;
-            bottom: 80px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #fff;
-            padding: 12px 28px;
-            border-radius: 60px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 20;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            letter-spacing: 0.3px;
-        }
-        .upload-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateX(-50%) scale(1.03);
-        }
-        .upload-btn:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-        #file-input {
-            display: none;
-        }
-        .info {
-            position: absolute;
-            bottom: 18px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            color: #eee;
-            padding: 10px 22px;
-            border-radius: 60px;
-            font-size: 0.85rem;
-            letter-spacing: 0.3px;
-            border: 1px solid rgba(255,255,255,0.15);
-            pointer-events: none;
-            white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 10;
-        }
-        .info strong {
-            color: #fff;
-            font-weight: 500;
-        }
-        .info span {
-            display: inline-block;
-            margin: 0 4px;
-            opacity: 0.7;
-        }
-        .remove-btn {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            font-size: 1.4rem;
-            cursor: pointer;
-            z-index: 25;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-        }
-        .remove-btn:hover {
-            background: rgba(200, 50, 50, 0.7);
-            transform: scale(1.05);
-        }
-        .remove-btn:active {
-            transform: scale(0.9);
-        }
-        .fallback-msg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #aaa;
-            font-size: 1.4rem;
-            font-weight: 300;
-            background: rgba(0,0,0,0.6);
-            padding: 16px 28px;
-            border-radius: 40px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 1px solid #444;
-            pointer-events: none;
-            text-align: center;
-            z-index: 5;
-        }
-        .opacity-control {
-            position: absolute;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 10px 20px;
-            border-radius: 40px;
-            border: 1px solid rgba(255,255,255,0.15);
-            display: none;
-            align-items: center;
-            gap: 12px;
-            z-index: 15;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        .opacity-control label {
-            color: #eee;
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-            font-weight: 300;
-        }
-        .opacity-control input[type="range"] {
-            width: 120px;
-            height: 4px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255,255,255,0.3);
-            border-radius: 4px;
-            outline: none;
-        }
-        .opacity-control input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        }
-        .opacity-control input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            border: none;
-        }
-        .opacity-value {
-            color: #fff;
-            font-size: 0.8rem;
-            min-width: 32px;
-            text-align: center;
-            font-weight: 500;
-        }
-        /* Kamera-Status-Anzeige */
-        .camera-status {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 6px 14px;
-            border-radius: 30px;
-            color: #4caf50;
-            font-size: 0.75rem;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 20px;
+            border-radius: 10px;
             display: flex;
+            gap: 20px;
             align-items: center;
-            gap: 8px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 90%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        input[type="file"] {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        #placeholder-text {
+            position: absolute;
+            z-index: 3;
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 8px;
             pointer-events: none;
-        }
-        .camera-status .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4caf50;
-            display: inline-block;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        .camera-status.error {
-            color: #f44336;
-            border-color: rgba(244, 67, 54, 0.3);
-        }
-        .camera-status.error .dot {
-            background: #f44336;
-        }
-        @media (max-width: 480px) {
-            .info {
-                font-size: 0.7rem;
-                padding: 6px 16px;
-                bottom: 12px;
-            }
-            .upload-btn {
-                font-size: 0.85rem;
-                padding: 10px 20px;
-                bottom: 70px;
-            }
-            .opacity-control {
-                bottom: 120px;
-                padding: 8px 14px;
-            }
-            .opacity-control input[type="range"] {
-                width: 80px;
-            }
-            .fallback-msg {
-                font-size: 1rem;
-                padding: 12px 20px;
-            }
-            .remove-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 1.2rem;
-                top: 12px;
-                right: 12px;
-            }
-            .camera-status {
-                font-size: 0.65rem;
-                padding: 4px 10px;
-                top: 12px;
-                left: 12px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <video id="video" autoplay playsinline muted></video>
-        <img id="overlay-img" alt="Dein hochgeladenes Bild">
-        
-        <input type="file" id="file-input" accept="image/*">
-        <button class="upload-btn" id="upload-btn">📤 Bild hochladen</button>
-        <button class="remove-btn" id="remove-btn">✕</button>
-        
-        <div class="opacity-control" id="opacity-control">
-            <label>Transparenz</label>
-            <input type="range" id="opacity-slider" min="10" max="90" value="55">
-            <span class="opacity-value" id="opacity-value">55%</span>
-        </div>
 
-        <div class="info">
-            📷 <strong>Kamera</strong> <span>•</span> 🖼️ <strong id="image-status">Kein Bild</strong>
-        </div>
+    <div id="ar-container">
+        <!-- Wichtig für iOS: playsinline und muted hinzugefügt -->
+        <video id="webcam-video" autoplay playsinline muted></video>
 
-        <div class="camera-status" id="camera-status">
-            <span class="dot"></span>
-            <span id="camera-status-text">Starte...</span>
+        <div id="placeholder-text">Lade oben ein Bild hoch, um mit dem AR-Zeichnen zu beginnen!</div>
+
+        <img id="overlay-image" src="" alt="" style="display: none;">
+
+        <div id="controls">
+            <div class="control-group">
+                <label for="imageLoader">Bild hochladen:</label>
+                <input type="file" id="imageLoader" accept="image/*">
+            </div>
+            <div class="control-group">
+                <label for="opacityRange">Transparenz: <span id="opacityValue">50%</span></label>
+                <input type="range" id="opacityRange" min="0" max="1" step="0.05" value="0.5">
+            </div>
+            <div class="control-group">
+                <label for="zoomRange">Zoom: <span id="zoomValue">100%</span></label>
+                <input type="range" id="zoomRange" min="0.2" max="3" step="0.05" value="1">
+            </div>
         </div>
     </div>
 
     <script>
-        (function() {
-            const video = document.getElementById('video');
-            const container = document.querySelector('.container');
-            const overlay = document.getElementById('overlay-img');
-            const fileInput = document.getElementById('file-input');
-            const uploadBtn = document.getElementById('upload-btn');
-            const removeBtn = document.getElementById('remove-btn');
-            const opacitySlider = document.getElementById('opacity-slider');
-            const opacityValue = document.getElementById('opacity-value');
-            const opacityControl = document.getElementById('opacity-control');
-            const imageStatus = document.getElementById('image-status');
-            const cameraStatus = document.getElementById('camera-status');
-            const cameraStatusText = document.getElementById('camera-status-text');
-            
-            let fallbackElement = null;
-            let currentImageLoaded = false;
-            let stream = null;
-            let cameraActive = false;
+        const video = document.getElementById('webcam-video');
+        const imageLoader = document.getElementById('imageLoader');
+        const overlayImage = document.getElementById('overlay-image');
+        const opacityRange = document.getElementById('opacityRange');
+        const opacityValue = document.getElementById('opacityValue');
+        const zoomRange = document.getElementById('zoomRange');
+        const zoomValue = document.getElementById('zoomValue');
+        const placeholderText = document.getElementById('placeholder-text');
 
-            // --- Kamera starten (Safari-optimiert) ---
-            async function startCamera() {
-                try {
-                    // Safari benötigt oft explizite Constraints
-                    const constraints = {
-                        video: {
-                            facingMode: 'environment',
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                            // Für Safari auf iOS wichtig:
-                            frameRate: { ideal: 30 }
-                        },
-                        audio: false
-                    };
-
-                    stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    
-                    // Wichtig für Safari: srcObject setzen und dann play()
-                    video.srcObject = stream;
-                    
-                    // Safari benötigt manchmal einen kleinen Delay
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    
-                    await video.play();
-                    
-                    cameraActive = true;
-                    cameraStatus.className = 'camera-status';
-                    cameraStatusText.textContent = 'Aktiv';
-                    
-                    if (fallbackElement) {
-                        fallbackElement.remove();
-                        fallbackElement = null;
-                    }
-                    
-                } catch (err) {
-                    console.error('Kamera-Fehler (Safari):', err);
-                    cameraActive = false;
-                    cameraStatus.className = 'camera-status error';
-                    cameraStatusText.textContent = '❌ Nicht verfügbar';
-                    
-                    // Spezifische Fehlermeldung für Safari
-                    let errorMsg = '📷 Kamera nicht verfügbar';
-                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                        errorMsg = '📷 Zugriff verweigert\nBitte erlaube in den Einstellungen';
-                    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                        errorMsg = '📷 Keine Kamera gefunden';
-                    }
-                    
-                    video.style.background = '#1a1a1a';
-                    
-                    if (!fallbackElement) {
-                        fallbackElement = document.createElement('div');
-                        fallbackElement.className = 'fallback-msg';
-                        fallbackElement.style.whiteSpace = 'pre-line';
-                        fallbackElement.innerText = errorMsg;
-                        container.appendChild(fallbackElement);
-                    }
-                }
+        // 1. Kamera starten (mit Fallback für ältere iOS-Geräte)
+        async function initCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Dein Browser unterstützt den Kamerazugriff leider nicht.");
+                return;
             }
 
-            // --- Kamera stoppen (für Safari sauber) ---
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    stream = null;
-                }
-                video.srcObject = null;
-                cameraActive = false;
-                cameraStatus.className = 'camera-status error';
-                cameraStatusText.textContent = '❌ Gestoppt';
-            }
-
-            // --- Bild hochladen ---
-            function loadImage(file) {
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    overlay.src = e.target.result;
-                    overlay.style.display = 'block';
-                    currentImageLoaded = true;
-                    
-                    imageStatus.textContent = 'Bild geladen ✅';
-                    removeBtn.style.display = 'flex';
-                    opacityControl.style.display = 'flex';
-                    
-                    const defaultOpacity = 0.55;
-                    overlay.style.opacity = defaultOpacity;
-                    opacitySlider.value = defaultOpacity * 100;
-                    opacityValue.textContent = Math.round(defaultOpacity * 100) + '%';
+            try {
+                // Versuch 1: Rückkamera bevorzugen
+                const constraints = {
+                    video: { facingMode: { ideal: "environment" } },
+                    audio: false
                 };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                handleStream(stream);
+            } catch (err) {
+                console.warn("Rückkamera konnte nicht geladen werden, starte Standardkamera...", err);
+                try {
+                    // Fallback: Irgendeine verfügbare Kamera nutzen
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    handleStream(fallbackStream);
+                } catch (fallbackErr) {
+                    console.error("Kamerafehler: ", fallbackErr);
+                    alert("Konnte nicht auf die Kamera zugreifen. Stelle sicher, dass du Safari nutzt und die Seite über HTTPS aufrufst.");
+                }
+            }
+        }
+
+        function handleStream(stream) {
+            video.srcObject = stream;
+            video.play().catch(e => {
+                console.warn("Autoplay wurde vom Browser blockiert:", e);
+            });
+        }
+
+        initCamera();
+
+        // 2. Bild-Upload verarbeiten
+        imageLoader.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    overlayImage.src = event.target.result;
+                    overlayImage.style.display = 'block';
+                    placeholderText.style.display = 'none';
+
+                    zoomRange.value = 1;
+                    zoomValue.textContent = '100%';
+                    overlayImage.style.transform = 'scale(1)';
+                }
                 reader.readAsDataURL(file);
             }
+        });
 
-            // --- Bild entfernen ---
-            function removeImage() {
-                overlay.src = '';
-                overlay.style.display = 'none';
-                currentImageLoaded = false;
-                imageStatus.textContent = 'Kein Bild';
-                removeBtn.style.display = 'none';
-                opacityControl.style.display = 'none';
-                fileInput.value = '';
-            }
+        // 3. Transparenz-Regler steuern
+        opacityRange.addEventListener('input', function() {
+            const val = opacityRange.value;
+            overlayImage.style.opacity = val;
+            opacityValue.textContent = Math.round(val * 100) + '%';
+        });
 
-            // --- Opacity steuern ---
-            opacitySlider.addEventListener('input', function() {
-                const val = this.value / 100;
-                overlay.style.opacity = val;
-                opacityValue.textContent = Math.round(val * 100) + '%';
-            });
-
-            // --- Event-Listener ---
-            uploadBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    loadImage(this.files[0]);
-                }
-            });
-
-            removeBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                removeImage();
-            });
-
-            // Drag & Drop
-            container.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.style.border = '3px solid rgba(255,255,255,0.3)';
-            });
-            container.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                this.style.border = 'none';
-            });
-            container.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.style.border = 'none';
-                const files = e.dataTransfer.files;
-                if (files && files[0] && files[0].type.startsWith('image/')) {
-                    loadImage(files[0]);
-                }
-            });
-
-            // --- Safari-spezifische Initialisierung ---
-            // iOS Safari benötigt User-Interaktion für Kamera
-            // Wir starten die Kamera beim ersten Klick/Touch
-            
-            let cameraStarted = false;
-            
-            // Versuche Kamera beim Laden (funktioniert auf macOS Safari, nicht auf iOS)
-            setTimeout(() => {
-                if (!cameraStarted) {
-                    // Nur versuchen, wenn nicht bereits gestartet
-                    startCamera().then(() => {
-                        cameraStarted = true;
-                    }).catch(() => {
-                        // Warte auf User-Interaktion
-                    });
-                }
-            }, 500);
-
-            // Für iOS: Beim ersten Touch/Click starten
-            function handleUserInteraction() {
-                if (!cameraStarted) {
-                    startCamera().then(() => {
-                        cameraStarted = true;
-                    }).catch(() => {
-                        // Fehler wird bereits in startCamera behandelt
-                    });
-                }
-            }
-
-            document.addEventListener('touchstart', handleUserInteraction, { once: true, passive: true });
-            document.addEventListener('click', handleUserInteraction, { once: true });
-
-            // --- Falls die Kamera aus irgendeinem Grund stoppt (z.B. iOS Safari) ---
-            // Bei iOS kann die Kamera beim Wechseln des Tabs stoppen
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden && cameraActive) {
-                    // Tab wurde verlassen – Kamera läuft weiter, aber wir könnten sie stoppen
-                    // oder beim Zurückkehren neu starten
-                } else if (!document.hidden && !cameraActive && !stream) {
-                    // Tab ist wieder aktiv – versuche Kamera neu zu starten
-                    if (!cameraStarted) {
-                        startCamera();
-                    }
-                }
-            });
-
-            // --- Tastaturkürzel ---
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'r' || e.key === 'R') {
-                    removeImage();
-                }
-                if (e.key === 'u' || e.key === 'U') {
-                    fileInput.click();
-                }
-            });
-
-            console.log('📷 Safari-kompatible Kamera + Overlay bereit');
-            console.log('ℹ️  Tipp: Klicke/Tippe auf den Bildschirm, falls die Kamera nicht startet');
-
-        })();
+        // 4. Zoom-Regler steuern
+        zoomRange.addEventListener('input', function() {
+            const zoomVal = zoomRange.value;
+            overlayImage.style.transform = `scale(${zoomVal})`;
+            zoomValue.textContent = Math.round(zoomVal * 100) + '%';
+        });
     </script>
 </body>
 </html>
